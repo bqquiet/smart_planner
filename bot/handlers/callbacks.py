@@ -182,8 +182,22 @@ async def cb_done(callback: CallbackQuery) -> None:
     if task is None:
         await callback.answer("❌ Задачу не знайдено.", show_alert=True)
         return
+
+    # Award XP
+    from services.gamification_service import record_task_done
+    from bot.handlers.gamification import format_xp_notification
+    from core.utils import utc_now
+    was_on_time = task.deadline is None or task.deadline >= utc_now()
+    async with get_session() as session2:
+        xp_result = await record_task_done(session2, task.user_id, was_on_time)
+
     note = " (наступна створена 🔁)" if task.repeat else ""
     await callback.answer(f"✅ Виконано!{note}")
+
+    xp_msg = format_xp_notification(xp_result)
+    if xp_result.get("level_up"):
+        await callback.message.answer(xp_msg, parse_mode="HTML")
+
     await cb_task_detail(callback)
 
 

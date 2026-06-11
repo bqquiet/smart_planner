@@ -128,6 +128,14 @@ async def _save_task(message: Message, state: FSMContext, tg_id: int, first_name
             repeat=data.get("repeat"),
         )
 
+    # Award XP for creating a task
+    try:
+        from services.gamification_service import record_task_created
+        async with get_session() as session2:
+            await record_task_created(session2, user.id)
+    except Exception:
+        pass
+
     from core.utils import format_deadline
     priority = data.get("priority", "medium")
     category = data.get("category")

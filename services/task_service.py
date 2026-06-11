@@ -217,25 +217,57 @@ async def get_user_stats(session: AsyncSession, user_id: int) -> dict:
 
 
 async def export_tasks_csv(session: AsyncSession, user_id: int) -> str:
-    """Return all tasks as a CSV string."""
+    """
+    Return all tasks as a formatted CSV string.
+    Uses utf-8-sig BOM so Excel opens it correctly on Windows.
+    Includes summary stats at the bottom.
+    """
     import csv, io
     from core.utils import format_deadline
     from core.constants import PRIORITY_LABEL, STATUS_LABEL, CATEGORY_LABEL, REPEAT_LABEL
 
     tasks = await list_tasks(session, user_id)
+    stats = await get_user_stats(session, user_id)
     output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["ID", "Назва", "Опис", "Пріоритет", "Статус", "Категорія", "Дедлайн", "Повтор", "Створено"])
+    writer = csv.writer(output, quoting=csv.QUOTE_ALL)
+
+    # ── Header ──────────────────────────────────────────────────────────────
+    writer.writerow([
+        "ID", "Title", "Description", "Priority", "Status",
+        "Category", "Repeat", "Deadline", "Created", "Notes"
+    ])
+
+    # ── Data rows ────────────────────────────────────────────────────────────
     for t in tasks:
+        deadline_str = format_deadline(t.deadline)
+        from core.utils import deadline_delta_label
+        delta = deadline_delta_label(t.deadline) if t.deadline and t.status == "active" else ""
+
         writer.writerow([
             t.id,
             t.title,
             t.description or "",
             PRIORITY_LABEL.get(t.priority, t.priority),
             STATUS_LABEL.get(t.status, t.status),
-            CATEGORY_LABEL.get(t.category or "", t.category or ""),
-            format_deadline(t.deadline),
-            REPEAT_LABEL.get(t.repeat or "", ""),
+            CATEGORY_LABEL.get(t.category or "", t.category or "—"),
+            REPEAT_LABEL.get(t.repeat or "", "—"),
+            deadline_str,
             format_deadline(t.created_at),
+            delta,
         ])
+
+    # ── Empty row + summary ──────────────────────────────────────────────────
+    writer.writerow([])
+    writer.writerow(["── SUMMARY ──", "", "", "", "", "", "", "", "", ""])
+    writer.writerow(["Total tasks", stats["total"], "", "", "", "", "", "", "", ""])
+    writer.writerow(["Done", stats["done"], "", "", "", "", "", "", "", ""])
+    writer.writerow(["Active", stats["active"], "", "", "", "", "", "", "", ""])
+    writer.writerow(["Overdue", stats["overdue"], "", "", "", "", "", "", "", ""])
+    writer.writerow(["Productivity", f"{stats['productivity']}%", "", "", "", "", "", "", "", ""])
+    writer.writerow([])
+    writer.writerow(["── BY CATEGORY ──", "", "", "", "", "", "", "", "", ""])
+    for cat, count in stats.get("by_category", {}).items():
+        label = CATEGORY_LABEL.get(cat, cat)
+        writer.writerow([label, count, "", "", "", "", "", "", "", ""])
+
     return output.getvalue()

@@ -67,3 +67,27 @@ class Task(Base):
 
     def __repr__(self) -> str:
         return f"<Task id={self.id} title={self.title!r} status={self.status}>"
+
+
+class UserStats(Base):
+    """Gamification stats per user — XP, level, streak."""
+
+    __tablename__ = "user_stats"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False, unique=True, index=True
+    )
+
+    xp: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    level: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    streak_days: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    longest_streak: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    tasks_done_total: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_activity_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    user: Mapped["User"] = relationship("User", backref="stats")
+
+    def __repr__(self) -> str:
+        return f"<UserStats user_id={self.user_id} level={self.level} xp={self.xp}>"

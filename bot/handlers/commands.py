@@ -56,6 +56,7 @@ async def cmd_help(message: Message) -> None:
         "/done_task <code>&lt;id&gt;</code> — Виконати\n"
         "/delete_task <code>&lt;id&gt;</code> — Видалити\n"
         "/ai — Додати задачу через AI\n"
+        "/profile — Мій профіль та XP\n"
         "/stats — Статистика\n"
         "/export — Експорт у CSV\n\n"
         "<i>💡 Більшість дій доступні через кнопки.</i>",

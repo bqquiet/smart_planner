@@ -1,15 +1,18 @@
 # Telegram bot
 aiogram==3.13.1
-aiohttp==3.10.11         # Webhook server (aiogram dependency)
+aiohttp==3.10.11
 
-# Database — async SQLAlchemy
+# Database
 sqlalchemy==2.0.36
-aiosqlite==0.20.0        # SQLite driver (local dev)
-asyncpg==0.30.0          # PostgreSQL async driver (production)
-psycopg2-binary==2.9.10  # PostgreSQL sync driver (Alembic migrations)
+aiosqlite==0.20.0
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
 
 # Migrations
 alembic==1.14.0
+
+# AI (OpenAI SDK works for both OpenAI and Groq)
+openai==1.35.0
 
 # Scheduler
 apscheduler==3.10.4
@@ -17,4 +20,3 @@ apscheduler==3.10.4
 # Utils
 python-dotenv==1.0.1
 python-dateutil==2.9.0
-openai==1.35.0

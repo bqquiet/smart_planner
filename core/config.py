@@ -1,14 +1,9 @@
-"""
-Core configuration — loaded from environment variables.
-"""
 from dataclasses import dataclass, field
 from pathlib import Path
 import os
-
 from dotenv import load_dotenv
 
 load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -32,9 +27,7 @@ class DatabaseConfig:
 class BotConfig:
     token: str = field(default_factory=lambda: os.getenv("BOT_TOKEN", ""))
     admin_ids: list[int] = field(
-        default_factory=lambda: [
-            int(i) for i in os.getenv("ADMIN_IDS", "").split(",") if i.strip()
-        ]
+        default_factory=lambda: [int(i) for i in os.getenv("ADMIN_IDS", "").split(",") if i.strip()]
     )
     webhook_host: str = field(default_factory=lambda: os.getenv("WEBHOOK_HOST", ""))
     webhook_path: str = field(default_factory=lambda: os.getenv("WEBHOOK_PATH", "/webhook"))
@@ -42,21 +35,40 @@ class BotConfig:
 
 @dataclass(frozen=True)
 class SchedulerConfig:
-    reminder_minutes_before: int = field(
-        default_factory=lambda: int(os.getenv("REMINDER_MINUTES_BEFORE", "60"))
-    )
-    overdue_check_interval: int = field(
-        default_factory=lambda: int(os.getenv("OVERDUE_CHECK_INTERVAL", "300"))
-    )
+    reminder_minutes_before: int = field(default_factory=lambda: int(os.getenv("REMINDER_MINUTES_BEFORE", "60")))
+    overdue_check_interval: int = field(default_factory=lambda: int(os.getenv("OVERDUE_CHECK_INTERVAL", "300")))
 
 
 @dataclass(frozen=True)
 class AIConfig:
+    provider: str = field(default_factory=lambda: os.getenv("AI_PROVIDER", "openai"))
     openai_api_key: str = field(default_factory=lambda: os.getenv("OPENAI_API_KEY", ""))
-    model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", "gpt-4o-mini"))
-    enabled: bool = field(
-        default_factory=lambda: bool(os.getenv("OPENAI_API_KEY", ""))
-    )
+    groq_api_key: str = field(default_factory=lambda: os.getenv("GROQ_API_KEY", ""))
+    model: str = field(default_factory=lambda: os.getenv("OPENAI_MODEL", ""))
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.openai_api_key or self.groq_api_key)
+
+    @property
+    def active_key(self) -> str:
+        if self.provider == "groq":
+            return self.groq_api_key
+        return self.openai_api_key
+
+    @property
+    def active_model(self) -> str:
+        if self.model:
+            return self.model
+        if self.provider == "groq":
+            return "llama-3.1-8b-instant"
+        return "gpt-4o-mini"
+
+    @property
+    def base_url(self) -> str | None:
+        if self.provider == "groq":
+            return "https://api.groq.com/openai/v1"
+        return None
 
 
 @dataclass(frozen=True)

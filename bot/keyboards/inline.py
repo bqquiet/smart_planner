@@ -20,9 +20,9 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
     if settings.ai.enabled:
         builder.button(text="🤖 AI задача", callback_data="ai_task_start")
     builder.button(text="📊 Статистика", callback_data="stats")
+    builder.button(text="🏅 Профіль", callback_data="profile")
     builder.button(text="📤 Експорт CSV", callback_data="export_csv")
-    cols = 2
-    builder.adjust(2, 2, 1 if settings.ai.enabled else 0, 2)
+    builder.adjust(2, 2, 1 if settings.ai.enabled else 0, 2, 1)
     return builder.as_markup()
 
 

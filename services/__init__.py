@@ -14,3 +14,5 @@ __all__ = [
     "get_user_stats", "export_tasks_csv", "create_scheduler",
     "parse_task_from_text", "suggest_priority", "generate_subtasks",
 ]
+
+from .gamification_service import get_profile, record_task_done, record_task_created, award_xp
